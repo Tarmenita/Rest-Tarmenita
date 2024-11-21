@@ -12,6 +12,9 @@ const firebaseConfig = {
 // Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 
+// Configurar persistencia
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
 // Referencias a elementos del DOM
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -42,7 +45,7 @@ loginForm.onsubmit = (e) => {
     const password = document.getElementById('password').value.trim();
 
     if (!username || !password) {
-        alert("Por favor, completa todos los campos.");
+        mostrarNotificacion("Por favor, completa todos los campos", "error");
         return;
     }
 
@@ -50,10 +53,10 @@ loginForm.onsubmit = (e) => {
         .then((userCredential) => {
             const user = userCredential.user;
             loginModal.style.display = "none";
-            checkUserRole(user);
+            verificarRolUsuario(user);
         })
         .catch((error) => {
-            handleError(error, "inicio de sesión");
+            manejarError(error, "iniciar sesión");
         });
 };
 
@@ -63,31 +66,32 @@ logoutBtn.onclick = () => {
         loginBtn.style.display = "block";
         logoutBtn.style.display = "none";
         mainContent.innerHTML = '';
+        mostrarNotificacion("Has cerrado sesión exitosamente");
     }).catch((error) => {
-        handleError(error, "cerrar sesión");
+        manejarError(error, "cerrar sesión");
     });
 };
 
 // Verificar rol del usuario
-function checkUserRole(user) {
+function verificarRolUsuario(user) {
     if (user.email === adminEmail) {
-        loadAdminInterface();
+        cargarInterfazAdmin();
     } else {
         firebase.database().ref('users/' + user.uid).once('value')
             .then((snapshot) => {
                 const userData = snapshot.val();
                 if (!userData) {
-                    alert("El usuario no tiene un rol asignado.");
+                    mostrarNotificacion("El usuario no tiene un rol asignado", "error");
                     return;
                 }
                 if (userData.role === 'mesera') {
-                    loadWaiterInterface(user.email);
+                    cargarInterfazMesera(user.email);
                 } else {
-                    alert("Rol desconocido.");
+                    mostrarNotificacion("Rol desconocido", "error");
                 }
             })
             .catch((error) => {
-                handleError(error, "verificar el rol del usuario");
+                manejarError(error, "verificar el rol del usuario");
             });
     }
     loginBtn.style.display = "none";
@@ -95,32 +99,61 @@ function checkUserRole(user) {
 }
 
 // Cargar interfaz de administrador
-function loadAdminInterface() {
+function cargarInterfazAdmin() {
     mainContent.innerHTML = `
-        <h2>Panel de Administrador</h2>
-        <button onclick="showCreateUserForm()" class="btn-primary">Crear Usuario</button>
-        <button onclick="showMenuManager()" class="btn-primary">Gestionar Menú</button>
-        <button onclick="showReports()" class="btn-primary">Ver Reportes</button>
+        <h2><i class="fas fa-user-cog"></i> Panel de Administrador</h2>
+        <div class="admin-buttons">
+            <button onclick="mostrarFormularioCrearUsuario()" class="btn-primary">
+                <i class="fas fa-user-plus"></i> Crear Usuario
+            </button>
+            <button onclick="mostrarGestorMenu()" class="btn-primary">
+                <i class="fas fa-utensils"></i> Gestionar Menú
+            </button>
+            <button onclick="mostrarReportes()" class="btn-primary">
+                <i class="fas fa-chart-bar"></i> Ver Reportes
+            </button>
+        </div>
         <div id="ordersContainer"></div>
     `;
-    listenForOrders();
+    escucharPedidos();
 }
 
 // Cargar interfaz de mesera
-function loadWaiterInterface(email) {
+function cargarInterfazMesera(email) {
     mainContent.innerHTML = `
-        <h2>Panel de Mesera</h2>
-        <button onclick="showTakeOrderForm()" class="btn-primary">Tomar Pedido</button>
+        <h2><i class="fas fa-concierge-bell"></i> Panel de Mesera</h2>
+        <button onclick="mostrarFormularioPedido()" class="btn-primary">
+            <i class="fas fa-clipboard-list"></i> Tomar Pedido
+        </button>
         <div id="menuContainer"></div>
     `;
-    loadMenu();
-    listenForOrderNotifications(email);
+    cargarMenu();
+    escucharNotificacionesPedidos(email);
+}
+
+// Cargar menú
+function cargarMenu() {
+    const menuContainer = document.getElementById('menuContainer');
+    firebase.database().ref('menu').on('value', (snapshot) => {
+        menuContainer.innerHTML = '<h3>Menú Actual</h3>';
+        snapshot.forEach((childSnapshot) => {
+            const item = childSnapshot.val();
+            menuContainer.innerHTML += `
+                <div class="menu-item">
+                    <p><strong>${item.name}</strong> - S/ ${item.price.toFixed(2)} (${item.type})</p>
+                </div>
+            `;
+        });
+    });
 }
 
 // Mostrar formulario para crear usuario
-function showCreateUserForm() {
+function mostrarFormularioCrearUsuario() {
     mainContent.innerHTML = `
-        <h2>Crear Nuevo Usuario</h2>
+        <button onclick="cargarInterfazAdmin()" class="btn-secondary back-button">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <h2><i class="fas fa-user-plus"></i> Crear Nuevo Usuario</h2>
         <form id="createUserForm">
             <div class="input-group">
                 <i class="fas fa-envelope"></i>
@@ -133,23 +166,25 @@ function showCreateUserForm() {
             <select id="newRole" required>
                 <option value="mesera">Mesera</option>
             </select>
-            <button type="submit" class="btn-primary">Crear Usuario</button>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-user-plus"></i> Crear Usuario
+            </button>
         </form>
     `;
     document.getElementById('createUserForm').onsubmit = (e) => {
         e.preventDefault();
-        createNewUser();
+        crearNuevoUsuario();
     };
 }
 
 // Crear un nuevo usuario
-function createNewUser() {
+function crearNuevoUsuario() {
     const email = document.getElementById('newUsername').value.trim();
     const password = document.getElementById('newPassword').value.trim();
     const role = document.getElementById('newRole').value;
 
     if (!email || !password || !role) {
-        alert("Por favor, completa todos los campos.");
+        mostrarNotificacion("Por favor, completa todos los campos", "error");
         return;
     }
 
@@ -162,51 +197,58 @@ function createNewUser() {
             });
         })
         .then(() => {
-            alert("Usuario creado exitosamente");
-            loadAdminInterface();
+            mostrarNotificacion("Usuario creado exitosamente");
+            cargarInterfazAdmin();
         })
         .catch((error) => {
-            handleError(error, "crear un nuevo usuario");
+            manejarError(error, "crear un nuevo usuario");
         });
 }
 
 // Mostrar gestor de menú
-function showMenuManager() {
+function mostrarGestorMenu() {
     mainContent.innerHTML = `
-        <h2>Gestionar Menú</h2>
+        <button onclick="cargarInterfazAdmin()" class="btn-secondary back-button">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <h2><i class="fas fa-utensils"></i> Gestionar Menú</h2>
         <form id="addDishForm">
             <div class="input-group">
+                <i class="fas fa-hamburger"></i>
                 <input type="text" id="newDishName" placeholder="Nombre del plato" required>
             </div>
             <div class="input-group">
+                <i class="fas fa-money-bill-wave"></i>
                 <input type="number" id="newDishPrice" placeholder="Precio en soles" step="0.01" required>
             </div>
             <select id="newDishType" required>
                 <option value="entrada">Entrada</option>
                 <option value="segundo">Segundo</option>
             </select>
-            <button type="submit" class="btn-primary">Agregar Plato</button>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-plus-circle"></i> Agregar Plato
+            </button>
         </form>
         <div class="menu-columns">
             <div class="menu-column">
-                <h3>Entradas</h3>
+                <h3><i class="fas fa-leaf"></i> Entradas</h3>
                 <div id="entradas"></div>
             </div>
             <div class="menu-column">
-                <h3>Segundos</h3>
+                <h3><i class="fas fa-drumstick-bite"></i> Segundos</h3>
                 <div id="segundos"></div>
             </div>
         </div>
     `;
     document.getElementById('addDishForm').onsubmit = (e) => {
         e.preventDefault();
-        addMenuItem();
+        agregarItemMenu();
     };
-    loadMenuItems();
+    cargarItemsMenu();
 }
 
 // Cargar items del menú
-function loadMenuItems() {
+function cargarItemsMenu() {
     const entradasContainer = document.getElementById('entradas');
     const segundosContainer = document.getElementById('segundos');
     firebase.database().ref('menu').on('value', (snapshot) => {
@@ -216,8 +258,10 @@ function loadMenuItems() {
             const item = childSnapshot.val();
             const itemHtml = `
                 <div class="menu-item">
-                    <p>${item.name} - S/ ${item.price.toFixed(2)}</p>
-                    <button onclick="removeMenuItem('${childSnapshot.key}')" class="btn-secondary">Eliminar</button>
+                    <p><strong>${item.name}</strong> - S/ ${item.price.toFixed(2)}</p>
+                    <button onclick="eliminarItemMenu('${childSnapshot.key}')" class="btn-danger">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
                 </div>
             `;
             if (item.type === 'entrada') {
@@ -230,13 +274,13 @@ function loadMenuItems() {
 }
 
 // Agregar item al menú
-function addMenuItem() {
+function agregarItemMenu() {
     const name = document.getElementById('newDishName').value.trim();
     const price = parseFloat(document.getElementById('newDishPrice').value);
     const type = document.getElementById('newDishType').value;
 
     if (!name || isNaN(price) || !type) {
-        alert("Por favor, ingresa un nombre, un precio válido y selecciona el tipo de plato.");
+        mostrarNotificacion("Por favor, completa todos los campos correctamente", "error");
         return;
     }
 
@@ -247,52 +291,61 @@ function addMenuItem() {
     }).then(() => {
         document.getElementById('newDishName').value = '';
         document.getElementById('newDishPrice').value = '';
+        mostrarNotificacion("Plato agregado exitosamente");
     }).catch((error) => {
-        handleError(error, "agregar plato al menú");
+        manejarError(error, "agregar plato al menú");
     });
 }
 
 // Eliminar item del menú
-function removeMenuItem(key) {
-    firebase.database().ref('menu/' + key).remove()
-        .then(() => {
-            alert("Plato eliminado exitosamente");
-        })
-        .catch((error) => {
-            handleError(error, "eliminar plato del menú");
-        });
+function eliminarItemMenu(key) {
+    if (confirm('¿Estás seguro de que quieres eliminar este plato?')) {
+        firebase.database().ref('menu/' + key).remove()
+            .then(() => {
+                mostrarNotificacion("Plato eliminado exitosamente");
+            })
+            .catch((error) => {
+                manejarError(error, "eliminar plato del menú");
+            });
+    }
 }
 
 // Mostrar formulario para tomar pedidos
-function showTakeOrderForm() {
+function mostrarFormularioPedido() {
     mainContent.innerHTML = `
-        <h2>Tomar Pedido</h2>
+        <button onclick="cargarInterfazMesera('${firebase.auth().currentUser.email}')" class="btn-secondary back-button">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <h2><i class="fas fa-clipboard-list"></i> Tomar Pedido</h2>
         <form id="orderForm">
             <div class="input-group">
+                <i class="fas fa-table"></i>
                 <input type="number" id="tableNumber" placeholder="Número de mesa" required>
             </div>
             <div class="menu-columns">
                 <div class="menu-column">
-                    <h3>Entradas</h3>
+                    <h3><i class="fas fa-leaf"></i> Entradas</h3>
                     <div id="entradasOrder"></div>
                 </div>
                 <div class="menu-column">
-                    <h3>Segundos</h3>
+                    <h3><i class="fas fa-drumstick-bite"></i> Segundos</h3>
                     <div id="segundosOrder"></div>
                 </div>
             </div>
-            <button type="submit" class="btn-primary">Enviar Pedido</button>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-paper-plane"></i> Enviar Pedido
+            </button>
         </form>
     `;
     document.getElementById('orderForm').onsubmit = (e) => {
         e.preventDefault();
-        submitOrder();
+        enviarPedido();
     };
-    loadMenuForOrder();
+    cargarMenuParaPedido();
 }
 
 // Cargar menú para tomar pedidos
-function loadMenuForOrder() {
+function cargarMenuParaPedido() {
     const entradasContainer = document.getElementById('entradasOrder');
     const segundosContainer = document.getElementById('segundosOrder');
     firebase.database().ref('menu').on('value', (snapshot) => {
@@ -316,12 +369,12 @@ function loadMenuForOrder() {
 }
 
 // Enviar pedido
-function submitOrder() {
+function enviarPedido() {
     const tableNumber = document.getElementById('tableNumber').value;
     const orderItems = document.querySelectorAll('input[name="orderItem"]:checked');
     
     if (!tableNumber || orderItems.length === 0) {
-        alert("Por favor, ingresa un número de mesa y selecciona al menos un plato.");
+        mostrarNotificacion("Por favor, ingresa un número de mesa y selecciona al menos un plato", "error");
         return;
     }
 
@@ -335,63 +388,102 @@ function submitOrder() {
 
     firebase.database().ref('orders').push(order)
         .then(() => {
-            alert("Pedido enviado exitosamente");
-            loadWaiterInterface(firebase.auth().currentUser.email);
+            mostrarNotificacion("Pedido enviado exitosamente");
+            cargarInterfazMesera(firebase.auth().currentUser.email);
         })
         .catch((error) => {
-            handleError(error, "enviar pedido");
+            manejarError(error, "enviar pedido");
         });
 }
 
 // Escuchar nuevos pedidos (para la cocina)
-function listenForOrders() {
+function escucharPedidos() {
     const ordersContainer = document.getElementById('ordersContainer');
     firebase.database().ref('orders').on('value', (snapshot) => {
-        ordersContainer.innerHTML = '<h3>Pedidos Actuales</h3>';
+        ordersContainer.innerHTML = '<h3><i class="fas fa-clipboard-check"></i> Pedidos Actuales</h3>';
         snapshot.forEach((childSnapshot) => {
             const order = childSnapshot.val();
-            ordersContainer.innerHTML += `
+            const orderHtml = `
                 <div class="order-item">
-                    <p>Mesa: ${order.table}</p>
-                    <p>Platos: ${order.items.join(', ')}</p>
-                    <p>Estado: ${order.status}</p>
-                    <p>Mesera: ${order.waiter}</p>
-                    <button onclick="updateOrderStatus('${childSnapshot.key}', 'preparando')" class="btn-primary">Preparando</button>
-                    <button onclick="updateOrderStatus('${childSnapshot.key}', 'listo')" class="btn-primary">Listo</button>
+                    <p><strong>Mesa:</strong> ${order.table}</p>
+                    <p><strong>Platos:</strong> ${order.items.join(', ')}</p>
+                    <p><strong>Estado:</strong> ${order.status}</p>
+                    <p><strong>Mesera:</strong> ${order.waiter}</p>
+                    <div class="order-buttons">
+                        ${order.status !== 'listo' ? `
+                            <button onclick="actualizarEstadoPedido('${childSnapshot.key}', 'preparando')" class="btn-primary">
+                                <i class="fas fa-fire"></i> Preparando
+                            </button>
+                            <button onclick="actualizarEstadoPedido('${childSnapshot.key}', 'listo')" class="btn-primary">
+                                <i class="fas fa-check"></i> Listo
+                            </button>
+                        ` : ''}
+                        ${order.status === 'listo' ? `
+                            <button onclick="eliminarPedido('${childSnapshot.key}')" class="btn-danger">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
             `;
+            ordersContainer.innerHTML += orderHtml;
         });
     });
 }
 
 // Actualizar estado del pedido
-function updateOrderStatus(orderId, status) {
+function actualizarEstadoPedido(orderId, status) {
     firebase.database().ref('orders/' + orderId).update({status: status})
         .then(() => {
-            alert("Estado del pedido actualizado");
+            mostrarNotificacion(`Estado del pedido actualizado a: ${status}`);
         })
         .catch((error) => {
-            handleError(error, "actualizar el estado del pedido");
+            manejarError(error, "actualizar el estado del pedido");
         });
 }
 
+// Eliminar pedido
+function eliminarPedido(orderId) {
+    if (confirm('¿Estás seguro de que quieres eliminar este pedido?')) {
+        firebase.database().ref('orders/' + orderId).remove()
+            .then(() => {
+                mostrarNotificacion("Pedido eliminado exitosamente");
+            })
+            .catch((error) => {
+                manejarError(error, "eliminar el pedido");
+            });
+    }
+}
+
 // Escuchar notificaciones de pedidos listos (para las meseras)
-function listenForOrderNotifications(waiterEmail) {
+function escucharNotificacionesPedidos(waiterEmail) {
     firebase.database().ref('orders').on('child_changed', (snapshot) => {
         const order = snapshot.val();
         if (order.status === 'listo' && order.waiter === waiterEmail) {
-            showNotification(`El pedido de la mesa ${order.table} está listo.`);
+            mostrarNotificacion(`¡El pedido de la mesa ${order.table} está listo!`);
+            // Hacer vibrar el dispositivo si está disponible
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]);
+            }
         }
     });
 }
 
 // Mostrar notificación
-function showNotification(message) {
+function mostrarNotificacion(mensaje, tipo = 'success') {
     const notificationContainer = document.getElementById('notificationContainer');
     const notification = document.createElement('div');
     notification.className = 'notification';
-    notification.textContent = message;
+    notification.innerHTML = `
+        <i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+        <span>${mensaje}</span>
+    `;
     notificationContainer.appendChild(notification);
+
+    // Hacer vibrar el dispositivo si está disponible
+    if ('vibrate' in navigator) {
+        navigator.vibrate(200);
+    }
 
     setTimeout(() => {
         notification.remove();
@@ -399,20 +491,25 @@ function showNotification(message) {
 }
 
 // Mostrar reportes
-function showReports() {
-    mainContent.innerHTML = '<h2>Reportes de Ventas</h2><div id="salesReport"></div>';
-    generateDailySalesReport();
+function mostrarReportes() {
+    mainContent.innerHTML = `
+        <button onclick="cargarInterfazAdmin()" class="btn-secondary back-button">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <h2><i class="fas fa-chart-bar"></i> Reporte de Segundos</h2>
+        <div id="salesReport"></div>
+    `;
+    generarReporteVentasDiarias();
 }
 
 // Generar reporte de ventas diarias
-function generateDailySalesReport() {
+function generarReporteVentasDiarias() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     firebase.database().ref('orders').orderByChild('timestamp').startAt(today.getTime())
         .once('value', (snapshot) => {
             const orders = snapshot.val();
-            let totalSales = 0;
             let dishCounts = {};
 
             for (let id in orders) {
@@ -428,56 +525,42 @@ function generateDailySalesReport() {
 
             const salesReport = document.getElementById('salesReport');
             salesReport.innerHTML = `
-                <h3>Ventas del día</h3>
+                <h3>Segundos vendidos hoy</h3>
                 <table>
                     <tr>
                         <th>Plato</th>
                         <th>Cantidad</th>
                     </tr>
-                    ${Object.entries(dishCounts).map(([dish, count]) => `
-                        <tr>
-                            <td>${dish}</td>
-                            <td>${count}</td>
-                        </tr>
-                    `).join('')}
+                    ${Object.entries(dishCounts)
+                        .filter(([dish, count]) => {
+                            // Verificar si el plato es un segundo
+                            const menuItem = Object.values(snapshot.val()).find(order => order.items.includes(dish));
+                            return menuItem && menuItem.type === 'segundo';
+                        })
+                        .map(([dish, count]) => `
+                            <tr>
+                                <td>${dish}</td>
+                                <td>${count}</td>
+                            </tr>
+                        `).join('')
+                    }
                 </table>
             `;
         });
 }
 
 // Manejo de errores
-function handleError(error, action) {
-    console.error(`Error al ${action}:`, error);
-    alert(`Ocurrió un error al ${action}. Mensaje: ${error.message}`);
+function manejarError(error, accion) {
+    console.error(`Error al ${accion}:`, error);
+    mostrarNotificacion(`Ocurrió un error al ${accion}. Por favor, intenta de nuevo.`, "error");
 }
-
-// Crear usuario administrador si no existe
-firebase.auth().signInWithEmailAndPassword(adminEmail, adminPassword)
-    .catch((error) => {
-        if (error.code === 'auth/user-not-found') {
-            firebase.auth().createUserWithEmailAndPassword(adminEmail, adminPassword)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    return firebase.database().ref('users/' + user.uid).set({
-                        email: adminEmail,
-                        role: 'admin'
-                    });
-                })
-                .then(() => {
-                    console.log("Usuario administrador creado exitosamente");
-                })
-                .catch((error) => {
-                    console.error("Error al crear usuario administrador:", error);
-                });
-        }
-    });
 
 // Escuchar cambios en el estado de autenticación
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
         loginBtn.style.display = "none";
         logoutBtn.style.display = "block";
-        checkUserRole(user);
+        verificarRolUsuario(user);
     } else {
         loginBtn.style.display = "block";
         logoutBtn.style.display = "none";
