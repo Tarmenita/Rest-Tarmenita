@@ -1,8 +1,9 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f0f0f0;
+    color: #333;
 }
 
 header {
@@ -10,6 +11,7 @@ header {
     color: white;
     text-align: center;
     padding: 1em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 nav {
@@ -26,6 +28,12 @@ button {
     padding: 10px 20px;
     cursor: pointer;
     border-radius: 4px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
 }
 
 .modal {
@@ -46,13 +54,18 @@ button {
     border: 1px solid #888;
     width: 80%;
     max-width: 500px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 input, select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin: 10px 0;
     box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
 }
 
 #submitLogin, #createUserBtn {
@@ -62,11 +75,43 @@ input, select {
 
 #mainContent {
     padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.menu-item, .order-item {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 @media screen and (max-width: 600px) {
     .modal-content {
         width: 90%;
+    }
+    
+    table, th, td {
+        font-size: 14px;
     }
 }
 
