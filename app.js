@@ -16,7 +16,7 @@ firebase.initializeApp(firebaseConfig);
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const loginModal = document.getElementById('loginModal');
-const submitLogin = document.getElementById('submitLogin');
+const loginForm = document.getElementById('loginForm');
 const mainContent = document.getElementById('mainContent');
 
 // Credenciales del administrador
@@ -36,7 +36,8 @@ window.onclick = (event) => {
 };
 
 // Manejar el inicio de sesión
-submitLogin.onclick = () => {
+loginForm.onsubmit = (e) => {
+    e.preventDefault();
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
 
@@ -80,7 +81,7 @@ function checkUserRole(user) {
                     return;
                 }
                 if (userData.role === 'mesera') {
-                    loadWaiterInterface();
+                    loadWaiterInterface(user.email);
                 } else {
                     alert("Rol desconocido.");
                 }
@@ -97,35 +98,48 @@ function checkUserRole(user) {
 function loadAdminInterface() {
     mainContent.innerHTML = `
         <h2>Panel de Administrador</h2>
-        <button onclick="showCreateUserForm()">Crear Usuario</button>
-        <button onclick="showMenuManager()">Gestionar Menú</button>
-        <button onclick="showReports()">Ver Reportes</button>
+        <button onclick="showCreateUserForm()" class="btn-primary">Crear Usuario</button>
+        <button onclick="showMenuManager()" class="btn-primary">Gestionar Menú</button>
+        <button onclick="showReports()" class="btn-primary">Ver Reportes</button>
         <div id="ordersContainer"></div>
     `;
     listenForOrders();
 }
 
 // Cargar interfaz de mesera
-function loadWaiterInterface() {
+function loadWaiterInterface(email) {
     mainContent.innerHTML = `
         <h2>Panel de Mesera</h2>
-        <button onclick="showTakeOrderForm()">Tomar Pedido</button>
+        <button onclick="showTakeOrderForm()" class="btn-primary">Tomar Pedido</button>
         <div id="menuContainer"></div>
     `;
     loadMenu();
+    listenForOrderNotifications(email);
 }
 
 // Mostrar formulario para crear usuario
 function showCreateUserForm() {
     mainContent.innerHTML = `
         <h2>Crear Nuevo Usuario</h2>
-        <input type="email" id="newUsername" placeholder="Correo electrónico">
-        <input type="password" id="newPassword" placeholder="Contraseña">
-        <select id="newRole">
-            <option value="mesera">Mesera</option>
-        </select>
-        <button id="createUserBtn" onclick="createNewUser()">Crear Usuario</button>
+        <form id="createUserForm">
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="newUsername" placeholder="Correo electrónico" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="newPassword" placeholder="Contraseña" required>
+            </div>
+            <select id="newRole" required>
+                <option value="mesera">Mesera</option>
+            </select>
+            <button type="submit" class="btn-primary">Crear Usuario</button>
+        </form>
     `;
+    document.getElementById('createUserForm').onsubmit = (e) => {
+        e.preventDefault();
+        createNewUser();
+    };
 }
 
 // Crear un nuevo usuario
@@ -160,29 +174,57 @@ function createNewUser() {
 function showMenuManager() {
     mainContent.innerHTML = `
         <h2>Gestionar Menú</h2>
-        <div>
-            <input type="text" id="newDishName" placeholder="Nombre del plato">
-            <input type="number" id="newDishPrice" placeholder="Precio">
-            <button onclick="addMenuItem()">Agregar Plato</button>
+        <form id="addDishForm">
+            <div class="input-group">
+                <input type="text" id="newDishName" placeholder="Nombre del plato" required>
+            </div>
+            <div class="input-group">
+                <input type="number" id="newDishPrice" placeholder="Precio en soles" step="0.01" required>
+            </div>
+            <select id="newDishType" required>
+                <option value="entrada">Entrada</option>
+                <option value="segundo">Segundo</option>
+            </select>
+            <button type="submit" class="btn-primary">Agregar Plato</button>
+        </form>
+        <div class="menu-columns">
+            <div class="menu-column">
+                <h3>Entradas</h3>
+                <div id="entradas"></div>
+            </div>
+            <div class="menu-column">
+                <h3>Segundos</h3>
+                <div id="segundos"></div>
+            </div>
         </div>
-        <div id="menuItems"></div>
     `;
+    document.getElementById('addDishForm').onsubmit = (e) => {
+        e.preventDefault();
+        addMenuItem();
+    };
     loadMenuItems();
 }
 
 // Cargar items del menú
 function loadMenuItems() {
-    const menuItems = document.getElementById('menuItems');
+    const entradasContainer = document.getElementById('entradas');
+    const segundosContainer = document.getElementById('segundos');
     firebase.database().ref('menu').on('value', (snapshot) => {
-        menuItems.innerHTML = '';
+        entradasContainer.innerHTML = '';
+        segundosContainer.innerHTML = '';
         snapshot.forEach((childSnapshot) => {
             const item = childSnapshot.val();
-            menuItems.innerHTML += `
+            const itemHtml = `
                 <div class="menu-item">
-                    <p>${item.name} - $${item.price}</p>
-                    <button onclick="removeMenuItem('${childSnapshot.key}')">Eliminar</button>
+                    <p>${item.name} - S/ ${item.price.toFixed(2)}</p>
+                    <button onclick="removeMenuItem('${childSnapshot.key}')" class="btn-secondary">Eliminar</button>
                 </div>
             `;
+            if (item.type === 'entrada') {
+                entradasContainer.innerHTML += itemHtml;
+            } else if (item.type === 'segundo') {
+                segundosContainer.innerHTML += itemHtml;
+            }
         });
     });
 }
@@ -191,15 +233,17 @@ function loadMenuItems() {
 function addMenuItem() {
     const name = document.getElementById('newDishName').value.trim();
     const price = parseFloat(document.getElementById('newDishPrice').value);
+    const type = document.getElementById('newDishType').value;
 
-    if (!name || isNaN(price)) {
-        alert("Por favor, ingresa un nombre y un precio válido.");
+    if (!name || isNaN(price) || !type) {
+        alert("Por favor, ingresa un nombre, un precio válido y selecciona el tipo de plato.");
         return;
     }
 
     firebase.database().ref('menu').push({
         name: name,
-        price: price
+        price: price,
+        type: type
     }).then(() => {
         document.getElementById('newDishName').value = '';
         document.getElementById('newDishPrice').value = '';
@@ -223,26 +267,50 @@ function removeMenuItem(key) {
 function showTakeOrderForm() {
     mainContent.innerHTML = `
         <h2>Tomar Pedido</h2>
-        <input type="number" id="tableNumber" placeholder="Número de mesa">
-        <div id="menuItems"></div>
-        <button onclick="submitOrder()">Enviar Pedido</button>
+        <form id="orderForm">
+            <div class="input-group">
+                <input type="number" id="tableNumber" placeholder="Número de mesa" required>
+            </div>
+            <div class="menu-columns">
+                <div class="menu-column">
+                    <h3>Entradas</h3>
+                    <div id="entradasOrder"></div>
+                </div>
+                <div class="menu-column">
+                    <h3>Segundos</h3>
+                    <div id="segundosOrder"></div>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">Enviar Pedido</button>
+        </form>
     `;
+    document.getElementById('orderForm').onsubmit = (e) => {
+        e.preventDefault();
+        submitOrder();
+    };
     loadMenuForOrder();
 }
 
 // Cargar menú para tomar pedidos
 function loadMenuForOrder() {
-    const menuItems = document.getElementById('menuItems');
+    const entradasContainer = document.getElementById('entradasOrder');
+    const segundosContainer = document.getElementById('segundosOrder');
     firebase.database().ref('menu').on('value', (snapshot) => {
-        menuItems.innerHTML = '';
+        entradasContainer.innerHTML = '';
+        segundosContainer.innerHTML = '';
         snapshot.forEach((childSnapshot) => {
             const item = childSnapshot.val();
-            menuItems.innerHTML += `
+            const itemHtml = `
                 <div class="menu-item">
                     <input type="checkbox" id="${childSnapshot.key}" name="orderItem" value="${item.name}">
-                    <label for="${childSnapshot.key}">${item.name} - $${item.price}</label>
+                    <label for="${childSnapshot.key}">${item.name} - S/ ${item.price.toFixed(2)}</label>
                 </div>
             `;
+            if (item.type === 'entrada') {
+                entradasContainer.innerHTML += itemHtml;
+            } else if (item.type === 'segundo') {
+                segundosContainer.innerHTML += itemHtml;
+            }
         });
     });
 }
@@ -261,13 +329,14 @@ function submitOrder() {
         table: tableNumber,
         items: Array.from(orderItems).map(item => item.value),
         status: 'pendiente',
-        timestamp: firebase.database.ServerValue.TIMESTAMP
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        waiter: firebase.auth().currentUser.email
     };
 
     firebase.database().ref('orders').push(order)
         .then(() => {
             alert("Pedido enviado exitosamente");
-            loadWaiterInterface();
+            loadWaiterInterface(firebase.auth().currentUser.email);
         })
         .catch((error) => {
             handleError(error, "enviar pedido");
@@ -286,8 +355,9 @@ function listenForOrders() {
                     <p>Mesa: ${order.table}</p>
                     <p>Platos: ${order.items.join(', ')}</p>
                     <p>Estado: ${order.status}</p>
-                    <button onclick="updateOrderStatus('${childSnapshot.key}', 'preparando')">Preparando</button>
-                    <button onclick="updateOrderStatus('${childSnapshot.key}', 'listo')">Listo</button>
+                    <p>Mesera: ${order.waiter}</p>
+                    <button onclick="updateOrderStatus('${childSnapshot.key}', 'preparando')" class="btn-primary">Preparando</button>
+                    <button onclick="updateOrderStatus('${childSnapshot.key}', 'listo')" class="btn-primary">Listo</button>
                 </div>
             `;
         });
@@ -303,6 +373,29 @@ function updateOrderStatus(orderId, status) {
         .catch((error) => {
             handleError(error, "actualizar el estado del pedido");
         });
+}
+
+// Escuchar notificaciones de pedidos listos (para las meseras)
+function listenForOrderNotifications(waiterEmail) {
+    firebase.database().ref('orders').on('child_changed', (snapshot) => {
+        const order = snapshot.val();
+        if (order.status === 'listo' && order.waiter === waiterEmail) {
+            showNotification(`El pedido de la mesa ${order.table} está listo.`);
+        }
+    });
+}
+
+// Mostrar notificación
+function showNotification(message) {
+    const notificationContainer = document.getElementById('notificationContainer');
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    notificationContainer.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
 }
 
 // Mostrar reportes
@@ -390,6 +483,5 @@ firebase.auth().onAuthStateChanged((user) => {
         logoutBtn.style.display = "none";
         mainContent.innerHTML = '';
     }
-
 });
 

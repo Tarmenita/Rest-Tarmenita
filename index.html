@@ -6,14 +6,15 @@
     <title>BIENVENIDO A LA TARMEÑITA</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <header>
-        <h1>BIENVENIDO A LA TARMEÑITA</h1>
+        <h1>LA TARMEÑITA</h1>
     </header>
     <nav>
-        <button id="loginBtn">Iniciar Sesión</button>
-        <button id="logoutBtn" style="display: none;">Cerrar Sesión</button>
+        <button id="loginBtn" class="btn-primary">Iniciar Sesión</button>
+        <button id="logoutBtn" class="btn-secondary" style="display: none;">Cerrar Sesión</button>
     </nav>
     <main id="mainContent">
         <!-- El contenido se cargará dinámicamente aquí -->
@@ -23,18 +24,27 @@
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <h2>Iniciar Sesión</h2>
-            <input type="email" id="username" placeholder="Correo electrónico">
-            <input type="password" id="password" placeholder="Contraseña">
-            <button id="submitLogin">Entrar</button>
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="email" id="username" placeholder="Correo electrónico" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Contraseña" required>
+                </div>
+                <button type="submit" id="submitLogin" class="btn-primary">Entrar</button>
+            </form>
         </div>
     </div>
+
+    <!-- Notificaciones -->
+    <div id="notificationContainer"></div>
 
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="app.js"></script>
-
 </body>
 </html>
-
