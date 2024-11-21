@@ -566,5 +566,6 @@ firebase.auth().onAuthStateChanged((user) => {
         logoutBtn.style.display = "none";
         mainContent.innerHTML = '';
     }
+
 });
 
