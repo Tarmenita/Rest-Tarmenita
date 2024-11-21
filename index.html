@@ -6,15 +6,15 @@
     <title>BIENVENIDO A LA TARMEÑITA</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
-        <h1>LA TARMEÑITA</h1>
+        <h1><i class="fas fa-utensils"></i> LA TARMEÑITA</h1>
     </header>
     <nav>
-        <button id="loginBtn" class="btn-primary">Iniciar Sesión</button>
-        <button id="logoutBtn" class="btn-secondary" style="display: none;">Cerrar Sesión</button>
+        <button id="loginBtn" class="btn-primary"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</button>
+        <button id="logoutBtn" class="btn-secondary" style="display: none;"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
     </nav>
     <main id="mainContent">
         <!-- El contenido se cargará dinámicamente aquí -->
@@ -23,7 +23,7 @@
     <!-- Modal de inicio de sesión -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
-            <h2>Iniciar Sesión</h2>
+            <h2><i class="fas fa-user-circle"></i> Iniciar Sesión</h2>
             <form id="loginForm">
                 <div class="input-group">
                     <i class="fas fa-user"></i>
@@ -33,7 +33,7 @@
                     <i class="fas fa-lock"></i>
                     <input type="password" id="password" placeholder="Contraseña" required>
                 </div>
-                <button type="submit" id="submitLogin" class="btn-primary">Entrar</button>
+                <button type="submit" id="submitLogin" class="btn-primary"><i class="fas fa-sign-in-alt"></i> Entrar</button>
             </form>
         </div>
     </div>
@@ -48,4 +48,3 @@
     <script src="app.js"></script>
 </body>
 </html>
-

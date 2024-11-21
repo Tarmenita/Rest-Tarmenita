@@ -6,6 +6,9 @@
     --white: #ffffff;
     --gray: #888;
     --light-gray: #ddd;
+    --dark-gray: #444;
+    --danger-color: #ff4444;
+    --accent-color: #FFA500;
 }
 
 * {
@@ -25,24 +28,35 @@ header {
     background-color: var(--primary-color);
     color: var(--white);
     text-align: center;
-    padding: 1em;
+    padding: 1.5em;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-nav {
-    background-color: var(--text-color);
-    color: var(--white);
-    padding: 0.5em;
-    text-align: right;
+header h1 {
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
-.btn-primary, .btn-secondary {
-    padding: 10px 20px;
+nav {
+    background-color: var(--dark-gray);
+    color: var(--white);
+    padding: 1em;
+    text-align: center;
+}
+
+.btn-primary, .btn-secondary, .btn-danger {
+    padding: 12px 24px;
     border: none;
-    border-radius: 4px;
+    border-radius: 50px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .btn-primary {
@@ -55,8 +69,19 @@ nav {
     color: var(--white);
 }
 
-.btn-primary:hover, .btn-secondary:hover {
+.btn-danger {
+    background-color: var(--danger-color);
+    color: var(--white);
+}
+
+.btn-primary:hover, .btn-secondary:hover, .btn-danger:hover {
     opacity: 0.9;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+.btn-primary i, .btn-secondary i, .btn-danger i {
+    margin-right: 8px;
 }
 
 .modal {
@@ -67,28 +92,34 @@ nav {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.6);
 }
 
 .modal-content {
     background-color: var(--white);
-    margin: 15% auto;
-    padding: 20px;
+    margin: 10% auto;
+    padding: 40px;
     border: 1px solid var(--light-gray);
-    width: 80%;
+    width: 90%;
     max-width: 400px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from {opacity: 0; transform: translateY(-50px);}
+    to {opacity: 1; transform: translateY(0);}
 }
 
 .input-group {
     position: relative;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .input-group i {
     position: absolute;
-    left: 10px;
+    left: 15px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--gray);
@@ -96,53 +127,86 @@ nav {
 
 .input-group input {
     width: 100%;
-    padding: 12px 12px 12px 40px;
-    border: 1px solid var(--light-gray);
-    border-radius: 4px;
+    padding: 15px 15px 15px 45px;
+    border: 2px solid var(--light-gray);
+    border-radius: 50px;
     font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
 #mainContent {
-    padding: 20px;
+    padding: 30px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 table {
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 30px;
     background-color: var(--white);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    border-radius: 15px;
+    overflow: hidden;
 }
 
 th, td {
     text-align: left;
-    padding: 12px;
+    padding: 15px;
     border-bottom: 1px solid var(--light-gray);
 }
 
 th {
     background-color: var(--primary-color);
     color: var(--white);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f5f5f5;
 }
 
 .menu-item, .order-item {
     background-color: var(--white);
     border: 1px solid var(--light-gray);
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.menu-item:hover, .order-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
 .menu-columns {
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 30px;
 }
 
 .menu-column {
-    width: 48%;
+    flex: 1;
+    min-width: 250px;
 }
 
 #notificationContainer {
@@ -153,13 +217,20 @@ th {
 }
 
 .notification {
-    background-color: var(--primary-color);
+    background-color: var(--accent-color);
     color: var(--white);
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    padding: 15px 25px;
+    margin-bottom: 15px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     animation: slideIn 0.5s ease-out;
+    display: flex;
+    align-items: center;
+}
+
+.notification i {
+    margin-right: 15px;
+    font-size: 24px;
 }
 
 @keyframes slideIn {
@@ -173,6 +244,10 @@ th {
     }
 }
 
+.back-button {
+    margin-bottom: 30px;
+}
+
 @media screen and (max-width: 768px) {
     .menu-columns {
         flex-direction: column;
@@ -183,11 +258,21 @@ th {
     }
 
     .modal-content {
-        width: 90%;
+        width: 95%;
+        margin: 5% auto;
+        padding: 30px;
     }
     
     table, th, td {
         font-size: 14px;
     }
-}
 
+    header h1 {
+        font-size: 2em;
+    }
+
+    .btn-primary, .btn-secondary, .btn-danger {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
