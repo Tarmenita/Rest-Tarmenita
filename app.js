@@ -138,9 +138,10 @@ function cargarMenu() {
         menuContainer.innerHTML = '<h3>Menú Actual</h3>';
         snapshot.forEach((childSnapshot) => {
             const item = childSnapshot.val();
+            const precioTexto = item.type === 'segundo' ? `- S/ ${item.price.toFixed(2)}` : '(Cortesía)';
             menuContainer.innerHTML += `
                 <div class="menu-item">
-                    <p><strong>${item.name}</strong> - S/ ${item.price.toFixed(2)} (${item.type})</p>
+                    <p><strong>${item.name}</strong> ${precioTexto} (${item.type === 'entrada' ? 'Entrada' : 'Segundo'})</p>
                 </div>
             `;
         });
@@ -217,11 +218,11 @@ function mostrarGestorMenu() {
                 <i class="fas fa-hamburger"></i>
                 <input type="text" id="newDishName" placeholder="Nombre del plato" required>
             </div>
-            <div class="input-group">
+            <div id="priceContainer" class="input-group" style="display: none;">
                 <i class="fas fa-money-bill-wave"></i>
-                <input type="number" id="newDishPrice" placeholder="Precio en soles" step="0.01" required>
+                <input type="number" id="newDishPrice" placeholder="Precio en soles" step="0.01">
             </div>
-            <select id="newDishType" required>
+            <select id="newDishType" required onchange="togglePriceVisibility()">
                 <option value="entrada">Entrada</option>
                 <option value="segundo">Segundo</option>
             </select>
@@ -247,6 +248,22 @@ function mostrarGestorMenu() {
     cargarItemsMenu();
 }
 
+// Mostrar/ocultar el campo de precio según el tipo de plato
+function togglePriceVisibility() {
+    const dishType = document.getElementById('newDishType').value;
+    const priceContainer = document.getElementById('priceContainer');
+    const priceInput = document.getElementById('newDishPrice');
+    
+    if (dishType === 'entrada') {
+        priceContainer.style.display = 'none';
+        priceInput.removeAttribute('required');
+        priceInput.value = '';
+    } else {
+        priceContainer.style.display = 'block';
+        priceInput.setAttribute('required', 'required');
+    }
+}
+
 // Cargar items del menú
 function cargarItemsMenu() {
     const entradasContainer = document.getElementById('entradas');
@@ -256,9 +273,10 @@ function cargarItemsMenu() {
         segundosContainer.innerHTML = '';
         snapshot.forEach((childSnapshot) => {
             const item = childSnapshot.val();
+            const precioTexto = item.type === 'segundo' ? `- S/ ${item.price.toFixed(2)}` : '(Cortesía)';
             const itemHtml = `
                 <div class="menu-item">
-                    <p><strong>${item.name}</strong> - S/ ${item.price.toFixed(2)}</p>
+                    <p><strong>${item.name}</strong> ${precioTexto}</p>
                     <button onclick="eliminarItemMenu('${childSnapshot.key}')" class="btn-danger">
                         <i class="fas fa-trash"></i> Eliminar
                     </button>
@@ -276,10 +294,10 @@ function cargarItemsMenu() {
 // Agregar item al menú
 function agregarItemMenu() {
     const name = document.getElementById('newDishName').value.trim();
-    const price = parseFloat(document.getElementById('newDishPrice').value);
     const type = document.getElementById('newDishType').value;
+    const price = type === 'segundo' ? parseFloat(document.getElementById('newDishPrice').value) : 0;
 
-    if (!name || isNaN(price) || !type) {
+    if (!name || (type === 'segundo' && isNaN(price))) {
         mostrarNotificacion("Por favor, completa todos los campos correctamente", "error");
         return;
     }
@@ -290,7 +308,9 @@ function agregarItemMenu() {
         type: type
     }).then(() => {
         document.getElementById('newDishName').value = '';
-        document.getElementById('newDishPrice').value = '';
+        if (type === 'segundo') {
+            document.getElementById('newDishPrice').value = '';
+        }
         mostrarNotificacion("Plato agregado exitosamente");
     }).catch((error) => {
         manejarError(error, "agregar plato al menú");
@@ -319,6 +339,13 @@ function mostrarFormularioPedido() {
         <h2><i class="fas fa-clipboard-list"></i> Tomar Pedido</h2>
         <form id="orderForm">
             <div class="input-group">
+                <i class="fas fa-utensils"></i>
+                <select id="orderType" required>
+                    <option value="mesa">Para la mesa</option>
+                    <option value="llevar">Para llevar</option>
+                </select>
+            </div>
+            <div id="tableNumberContainer" class="input-group">
                 <i class="fas fa-table"></i>
                 <input type="number" id="tableNumber" placeholder="Número de mesa" required>
             </div>
@@ -341,7 +368,21 @@ function mostrarFormularioPedido() {
         e.preventDefault();
         enviarPedido();
     };
+    document.getElementById('orderType').onchange = toggleTableNumberVisibility;
     cargarMenuParaPedido();
+}
+
+// Mostrar/ocultar el campo de número de mesa según el tipo de pedido
+function toggleTableNumberVisibility() {
+    const orderType = document.getElementById('orderType').value;
+    const tableNumberContainer = document.getElementById('tableNumberContainer');
+    if (orderType === 'llevar') {
+        tableNumberContainer.style.display = 'none';
+        document.getElementById('tableNumber').removeAttribute('required');
+    } else {
+        tableNumberContainer.style.display = 'block';
+        document.getElementById('tableNumber').setAttribute('required', 'required');
+    }
 }
 
 // Cargar menú para tomar pedidos
@@ -353,10 +394,16 @@ function cargarMenuParaPedido() {
         segundosContainer.innerHTML = '';
         snapshot.forEach((childSnapshot) => {
             const item = childSnapshot.val();
+            const precioTexto = item.type === 'segundo' ? `- S/ ${item.price.toFixed(2)}` : '(Cortesía)';
             const itemHtml = `
-                <div class="menu-item">
-                    <input type="checkbox" id="${childSnapshot.key}" name="orderItem" value="${item.name}">
-                    <label for="${childSnapshot.key}">${item.name} - S/ ${item.price.toFixed(2)}</label>
+                <div class="menu-item-order">
+                    <span>${item.name} ${precioTexto}</span>
+                    <div class="quantity-control">
+                        <button type="button" onclick="cambiarCantidad('${childSnapshot.key}', -1)" class="btn-quantity">-</button>
+                        <input type="number" id="${childSnapshot.key}" name="orderItem" min="0" value="0" 
+                               data-name="${item.name}" data-price="${item.price}" data-type="${item.type}" readonly>
+                        <button type="button" onclick="cambiarCantidad('${childSnapshot.key}', 1)" class="btn-quantity">+</button>
+                    </div>
                 </div>
             `;
             if (item.type === 'entrada') {
@@ -368,19 +415,35 @@ function cargarMenuParaPedido() {
     });
 }
 
+// Función para cambiar la cantidad de un plato
+function cambiarCantidad(id, cambio) {
+    const input = document.getElementById(id);
+    let cantidad = parseInt(input.value) + cambio;
+    input.value = Math.max(0, cantidad);
+}
+
 // Enviar pedido
 function enviarPedido() {
+    const orderType = document.getElementById('orderType').value;
     const tableNumber = document.getElementById('tableNumber').value;
-    const orderItems = document.querySelectorAll('input[name="orderItem"]:checked');
+    const orderItems = document.querySelectorAll('input[name="orderItem"]');
     
-    if (!tableNumber || orderItems.length === 0) {
-        mostrarNotificacion("Por favor, ingresa un número de mesa y selecciona al menos un plato", "error");
+    if ((orderType === 'mesa' && !tableNumber) || !Array.from(orderItems).some(item => parseInt(item.value) > 0)) {
+        mostrarNotificacion("Por favor, completa todos los campos requeridos y selecciona al menos un plato", "error");
         return;
     }
 
     const order = {
-        table: tableNumber,
-        items: Array.from(orderItems).map(item => item.value),
+        type: orderType,
+        table: orderType === 'mesa' ? tableNumber : 'Para llevar',
+        items: Array.from(orderItems)
+            .filter(item => parseInt(item.value) > 0)
+            .map(item => ({
+                name: item.dataset.name,
+                price: parseFloat(item.dataset.price),
+                type: item.dataset.type,
+                quantity: parseInt(item.value)
+            })),
         status: 'pendiente',
         timestamp: firebase.database.ServerValue.TIMESTAMP,
         waiter: firebase.auth().currentUser.email
@@ -405,8 +468,12 @@ function escucharPedidos() {
             const order = childSnapshot.val();
             const orderHtml = `
                 <div class="order-item">
-                    <p><strong>Mesa:</strong> ${order.table}</p>
-                    <p><strong>Platos:</strong> ${order.items.join(', ')}</p>
+                    <p><strong>Tipo:</strong> ${order.type === 'mesa' ? 'Para la mesa' : 'Para llevar'}</p>
+                    <p><strong>${order.type === 'mesa' ? 'Mesa' : 'Pedido'}:</strong> ${order.table}</p>
+                    <p><strong>Platos:</strong></p>
+                    <ul>
+                        ${order.items.map(item => `<li>${item.quantity}x ${item.name} (${item.type})</li>`).join('')}
+                    </ul>
                     <p><strong>Estado:</strong> ${order.status}</p>
                     <p><strong>Mesera:</strong> ${order.waiter}</p>
                     <div class="order-buttons">
@@ -445,13 +512,19 @@ function actualizarEstadoPedido(orderId, status) {
 // Eliminar pedido
 function eliminarPedido(orderId) {
     if (confirm('¿Estás seguro de que quieres eliminar este pedido?')) {
-        firebase.database().ref('orders/' + orderId).remove()
-            .then(() => {
-                mostrarNotificacion("Pedido eliminado exitosamente");
-            })
-            .catch((error) => {
-                manejarError(error, "eliminar el pedido");
-            });
+        firebase.database().ref('orders/' + orderId).once('value', (snapshot) => {
+            const deletedOrder = snapshot.val();
+            firebase.database().ref('deletedOrders').push(deletedOrder)
+                .then(() => {
+                    return firebase.database().ref('orders/' + orderId).remove();
+                })
+                .then(() => {
+                    mostrarNotificacion("Pedido eliminado y agregado al reporte exitosamente");
+                })
+                .catch((error) => {
+                    manejarError(error, "eliminar el pedido");
+                });
+        });
     }
 }
 
@@ -460,7 +533,7 @@ function escucharNotificacionesPedidos(waiterEmail) {
     firebase.database().ref('orders').on('child_changed', (snapshot) => {
         const order = snapshot.val();
         if (order.status === 'listo' && order.waiter === waiterEmail) {
-            mostrarNotificacion(`¡El pedido de la mesa ${order.table} está listo!`);
+            mostrarNotificacion(`¡El pedido ${order.type === 'mesa' ? 'de la mesa ' + order.table : 'para llevar'} está listo!`);
             // Hacer vibrar el dispositivo si está disponible
             if ('vibrate' in navigator) {
                 navigator.vibrate([200, 100, 200]);
@@ -496,57 +569,109 @@ function mostrarReportes() {
         <button onclick="cargarInterfazAdmin()" class="btn-secondary back-button">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
-        <h2><i class="fas fa-chart-bar"></i> Reporte de Segundos</h2>
-        <div id="salesReport"></div>
+        <h2><i class="fas fa-chart-bar"></i> Reportes</h2>
+        <div class="report-buttons">
+            <button onclick="generarReporteVentas()" class="btn-primary">
+                <i class="fas fa-file-invoice-dollar"></i> Generar Reporte de Ventas
+            </button>
+            <button onclick="eliminarReporteVentas()" class="btn-danger">
+                <i class="fas fa-trash-alt"></i> Eliminar Reporte de Ventas
+            </button>
+        </div>
+        <div id="reportContent"></div>
     `;
-    generarReporteVentasDiarias();
 }
 
-// Generar reporte de ventas diarias
-function generarReporteVentasDiarias() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+// Generar reporte de ventas
+function generarReporteVentas() {
+    const reportContent = document.getElementById('reportContent');
+    reportContent.innerHTML = '<h3>Cargando reporte...</h3>';
 
-    firebase.database().ref('orders').orderByChild('timestamp').startAt(today.getTime())
-        .once('value', (snapshot) => {
-            const orders = snapshot.val();
-            let dishCounts = {};
+    firebase.database().ref('deletedOrders').once('value')
+        .then((snapshot) => {
+            const deletedOrders = snapshot.val();
+            let ventasPorMesa = {};
+            let ventasTotales = 0;
+            let ventasPorMenu = {};
 
-            for (let id in orders) {
-                const order = orders[id];
+            for (let id in deletedOrders) {
+                const order = deletedOrders[id];
+                const mesa = order.table;
+                if (!ventasPorMesa[mesa]) {
+                    ventasPorMesa[mesa] = 0;
+                }
+
                 order.items.forEach(item => {
-                    if (dishCounts[item]) {
-                        dishCounts[item]++;
-                    } else {
-                        dishCounts[item] = 1;
+                    if (item.type === 'segundo') {
+                        ventasPorMesa[mesa] += item.price * item.quantity;
+                        ventasTotales += item.price * item.quantity;
+                    }
+
+                    const menuKey = `${item.name} (${item.type})`;
+                    if (!ventasPorMenu[menuKey]) {
+                        ventasPorMenu[menuKey] = { cantidad: 0, total: 0 };
+                    }
+                    ventasPorMenu[menuKey].cantidad += item.quantity;
+                    if (item.type === 'segundo') {
+                        ventasPorMenu[menuKey].total += item.price * item.quantity;
                     }
                 });
             }
 
-            const salesReport = document.getElementById('salesReport');
-            salesReport.innerHTML = `
-                <h3>Segundos vendidos hoy</h3>
+            let reporteHtml = `
+                <h3>Reporte de Ventas (Pedidos Eliminados)</h3>
+                <h4>Ventas por Mesa</h4>
+                <table>
+                    <tr>
+                        <th>Mesa</th>
+                        <th>Total Vendido</th>
+                    </tr>
+                    ${Object.entries(ventasPorMesa).map(([mesa, total]) => `
+                        <tr>
+                            <td>${mesa}</td>
+                            <td>S/ ${total.toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+
+                <h4>Ventas por Plato</h4>
                 <table>
                     <tr>
                         <th>Plato</th>
                         <th>Cantidad</th>
+                        <th>Total Vendido</th>
                     </tr>
-                    ${Object.entries(dishCounts)
-                        .filter(([dish, count]) => {
-                            // Verificar si el plato es un segundo
-                            const menuItem = Object.values(snapshot.val()).find(order => order.items.includes(dish));
-                            return menuItem && menuItem.type === 'segundo';
-                        })
-                        .map(([dish, count]) => `
-                            <tr>
-                                <td>${dish}</td>
-                                <td>${count}</td>
-                            </tr>
-                        `).join('')
-                    }
+                    ${Object.entries(ventasPorMenu).map(([menu, datos]) => `
+                        <tr>
+                            <td>${menu}</td>
+                            <td>${datos.cantidad}</td>
+                            <td>S/ ${datos.total.toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
                 </table>
+
+                <h4>Total de Ventas: S/ ${ventasTotales.toFixed(2)}</h4>
             `;
+
+            reportContent.innerHTML = reporteHtml;
+        })
+        .catch((error) => {
+            manejarError(error, "generar el reporte de ventas");
         });
+}
+
+// Eliminar reporte de ventas
+function eliminarReporteVentas() {
+    if (confirm('¿Estás seguro de que quieres eliminar el reporte de ventas? Esta acción eliminará todos los pedidos eliminados registrados.')) {
+        firebase.database().ref('deletedOrders').remove()
+            .then(() => {
+                mostrarNotificacion("Reporte de ventas eliminado exitosamente");
+                document.getElementById('reportContent').innerHTML = '';
+            })
+            .catch((error) => {
+                manejarError(error, "eliminar el reporte de ventas");
+            });
+    }
 }
 
 // Manejo de errores
@@ -566,6 +691,19 @@ firebase.auth().onAuthStateChanged((user) => {
         logoutBtn.style.display = "none";
         mainContent.innerHTML = '';
     }
-
 });
+
+// Exportar funciones necesarias para que sean accesibles globalmente
+window.mostrarFormularioCrearUsuario = mostrarFormularioCrearUsuario;
+window.mostrarGestorMenu = mostrarGestorMenu;
+window.mostrarReportes = mostrarReportes;
+window.eliminarItemMenu = eliminarItemMenu;
+window.actualizarEstadoPedido = actualizarEstadoPedido;
+window.eliminarPedido = eliminarPedido;
+window.cargarInterfazAdmin = cargarInterfazAdmin;
+window.cargarInterfazMesera = cargarInterfazMesera;
+window.generarReporteVentas = generarReporteVentas;
+window.eliminarReporteVentas = eliminarReporteVentas;
+window.togglePriceVisibility = togglePriceVisibility;
+window.cambiarCantidad = cambiarCantidad;
 

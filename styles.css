@@ -125,7 +125,7 @@ header h1 {
     color: var(--gray);
 }
 
-.input-group input {
+.input-group input, .input-group select {
     width: 100%;
     padding: 15px 15px 15px 45px;
     border: 2px solid var(--light-gray);
@@ -134,7 +134,7 @@ header h1 {
     transition: all 0.3s ease;
 }
 
-.input-group input:focus {
+.input-group input:focus, .input-group select:focus {
     border-color: var(--primary-color);
     outline: none;
     box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
@@ -236,6 +236,42 @@ th {
     }
 }
 
+/* New styles for order type selection */
+#orderType {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid var(--light-gray);
+    border-radius: 50px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+#orderType:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+/* Styles for the order details in the admin panel */
+.order-details {
+    background-color: var(--white);
+    border: 1px solid var(--light-gray);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.order-details p {
+    margin-bottom: 10px;
+}
+
+.order-details strong {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
 @media screen and (max-width: 768px) {
     .menu-columns {
         flex-direction: column;
@@ -263,4 +299,8 @@ th {
         font-size: 14px;
     }
 
+    #orderType {
+        font-size: 14px;
+        padding: 12px;
+    }
 }
