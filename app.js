@@ -136,17 +136,41 @@ function cargarMenu() {
     const menuContainer = document.getElementById('menuContainer');
     firebase.database().ref('menu').on('value', (snapshot) => {
         menuContainer.innerHTML = '<h3>Menú Actual</h3>';
-        snapshot.forEach((childSnapshot) => {
-            const item = childSnapshot.val();
-            const precioTexto = item.type === 'segundo' ? `- S/ ${item.price.toFixed(2)}` : '(Cortesía)';
+        
+        if (!snapshot.exists()) {
             menuContainer.innerHTML += `
-                <div class="menu-item">
-                    <p><strong>${item.name}</strong> ${precioTexto} (${item.type === 'entrada' ? 'Entrada' : 'Segundo'})</p>
+                <div class="empty-menu">
+                    <p>No hay platos disponibles en el menú</p>
                 </div>
             `;
+            return;
+        }
+
+        let hayPlatos = false;
+
+        snapshot.forEach((childSnapshot) => {
+            const item = childSnapshot.val();
+            if (item && item.name && item.type) {
+                const precioTexto = item.type === 'segundo' ? `S/ ${item.price.toFixed(2)}` : 'Cortesía';
+                menuContainer.innerHTML += `
+                    <div class="menu-item">
+                        <p><strong>${item.name}</strong> - ${precioTexto}</p>
+                    </div>
+                `;
+                hayPlatos = true;
+            }
         });
+
+        if (!hayPlatos) {
+            menuContainer.innerHTML += `
+                <div class="empty-menu">
+                    <p>No hay platos disponibles en el menú</p>
+                </div>
+            `;
+        }
     });
 }
+
 
 // Mostrar formulario para crear usuario
 function mostrarFormularioCrearUsuario() {
@@ -264,30 +288,51 @@ function togglePriceVisibility() {
     }
 }
 
-// Cargar items del menú
+// Cargar items del menú (para el administrador)
 function cargarItemsMenu() {
     const entradasContainer = document.getElementById('entradas');
     const segundosContainer = document.getElementById('segundos');
     firebase.database().ref('menu').on('value', (snapshot) => {
         entradasContainer.innerHTML = '';
         segundosContainer.innerHTML = '';
+        
+        if (!snapshot.exists()) {
+            entradasContainer.innerHTML = '<p>No hay entradas disponibles</p>';
+            segundosContainer.innerHTML = '<p>No hay segundos disponibles</p>';
+            return;
+        }
+
+        let hayEntradas = false;
+        let haySegundos = false;
+
         snapshot.forEach((childSnapshot) => {
             const item = childSnapshot.val();
-            const precioTexto = item.type === 'segundo' ? `- S/ ${item.price.toFixed(2)}` : '(Cortesía)';
-            const itemHtml = `
-                <div class="menu-item">
-                    <p><strong>${item.name}</strong> ${precioTexto}</p>
-                    <button onclick="eliminarItemMenu('${childSnapshot.key}')" class="btn-danger">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
-                </div>
-            `;
-            if (item.type === 'entrada') {
-                entradasContainer.innerHTML += itemHtml;
-            } else if (item.type === 'segundo') {
-                segundosContainer.innerHTML += itemHtml;
+            if (item && item.name && item.type) {
+                const precioTexto = item.type === 'segundo' ? `S/ ${item.price.toFixed(2)}` : 'Cortesía';
+                const itemHtml = `
+                    <div class="menu-item">
+                        <p><strong>${item.name}</strong> - ${precioTexto}</p>
+                        <button onclick="eliminarItemMenu('${childSnapshot.key}')" class="btn-danger">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                `;
+                if (item.type === 'entrada') {
+                    entradasContainer.innerHTML += itemHtml;
+                    hayEntradas = true;
+                } else if (item.type === 'segundo') {
+                    segundosContainer.innerHTML += itemHtml;
+                    haySegundos = true;
+                }
             }
         });
+
+        if (!hayEntradas) {
+            entradasContainer.innerHTML = '<p>No hay entradas disponibles</p>';
+        }
+        if (!haySegundos) {
+            segundosContainer.innerHTML = '<p>No hay segundos disponibles</p>';
+        }
     });
 }
 
@@ -329,6 +374,7 @@ function eliminarItemMenu(key) {
             });
     }
 }
+
 
 // Mostrar formulario para tomar pedidos
 function mostrarFormularioPedido() {
@@ -392,26 +438,52 @@ function cargarMenuParaPedido() {
     firebase.database().ref('menu').on('value', (snapshot) => {
         entradasContainer.innerHTML = '';
         segundosContainer.innerHTML = '';
+        
+        if (!snapshot.exists()) {
+            entradasContainer.innerHTML = '<p>No hay entradas disponibles</p>';
+            segundosContainer.innerHTML = '<p>No hay segundos disponibles</p>';
+            return;
+        }
+
+        let hayEntradas = false;
+        let haySegundos = false;
+
         snapshot.forEach((childSnapshot) => {
             const item = childSnapshot.val();
-            const precioTexto = item.type === 'segundo' ? `- S/ ${item.price.toFixed(2)}` : '(Cortesía)';
-            const itemHtml = `
-                <div class="menu-item-order">
-                    <span>${item.name} ${precioTexto}</span>
-                    <div class="quantity-control">
-                        <button type="button" onclick="cambiarCantidad('${childSnapshot.key}', -1)" class="btn-quantity">-</button>
-                        <input type="number" id="${childSnapshot.key}" name="orderItem" min="0" value="0" 
-                               data-name="${item.name}" data-price="${item.price}" data-type="${item.type}" readonly>
-                        <button type="button" onclick="cambiarCantidad('${childSnapshot.key}', 1)" class="btn-quantity">+</button>
+            if (item && item.name && item.type) {
+                const precioTexto = item.type === 'segundo' ? `S/ ${item.price.toFixed(2)}` : 'Cortesía';
+                const itemHtml = `
+                    <div class="menu-item-order">
+                        <span class="item-name">${item.name} - ${precioTexto}</span>
+                        <div class="quantity-control">
+                            <button type="button" onclick="cambiarCantidad('${childSnapshot.key}', -1)" class="btn-quantity">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" id="${childSnapshot.key}" name="orderItem" min="0" value="0" 
+                                   data-name="${item.name}" data-price="${item.price || 0}" data-type="${item.type}" 
+                                   class="quantity-input" readonly>
+                            <button type="button" onclick="cambiarCantidad('${childSnapshot.key}', 1)" class="btn-quantity">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `;
-            if (item.type === 'entrada') {
-                entradasContainer.innerHTML += itemHtml;
-            } else if (item.type === 'segundo') {
-                segundosContainer.innerHTML += itemHtml;
+                `;
+                if (item.type === 'entrada') {
+                    entradasContainer.innerHTML += itemHtml;
+                    hayEntradas = true;
+                } else if (item.type === 'segundo') {
+                    segundosContainer.innerHTML += itemHtml;
+                    haySegundos = true;
+                }
             }
         });
+
+        if (!hayEntradas) {
+            entradasContainer.innerHTML = '<p>No hay entradas disponibles</p>';
+        }
+        if (!haySegundos) {
+            segundosContainer.innerHTML = '<p>No hay segundos disponibles</p>';
+        }
     });
 }
 
@@ -706,4 +778,3 @@ window.generarReporteVentas = generarReporteVentas;
 window.eliminarReporteVentas = eliminarReporteVentas;
 window.togglePriceVisibility = togglePriceVisibility;
 window.cambiarCantidad = cambiarCantidad;
-
