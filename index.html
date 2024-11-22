@@ -4,53 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BIENVENIDO A LA TARMEÑITA</title>
-    <!-- Agregamos el favicon -->
     <link rel="icon" type="image/png" href="restaurante.png">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="background-image"></div>
-    <header>
-        <h1><i class="fas fa-utensils"></i> LA TARMEÑITA</h1>
-    </header>
-    <div class="login-container">
-        <button id="loginBtn" class="btn-primary"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</button>
-        <button id="logoutBtn" class="btn-secondary" style="display: none;"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
-    </div>
-    <main id="mainContent">
-        <!-- El contenido se cargará dinámicamente aquí -->
-    </main>
-
-    <!-- Modal de inicio de sesión -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <h2><i class="fas fa-user-circle"></i> Iniciar Sesión</h2>
-            <form id="loginForm">
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="email" id="username" placeholder="Correo electrónico" required>
-                </div>
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password" placeholder="Contraseña" required>
-                </div>
-                <button type="submit" id="submitLogin" class="btn-primary"><i class="fas fa-sign-in-alt"></i> Entrar</button>
-            </form>
+    <div class="main-container">
+        <header>
+            <div class="logo-container">
+                <img src="restaurante.png" alt="Logo" class="logo-icon">
+                <h1>LA TARMEÑITA</h1>
+            </div>
+        </header>
+        
+        <div class="login-container">
+            <button id="loginBtn" class="btn-primary">
+                <i class="fas fa-sign-in-alt"></i> INICIAR SESIÓN
+            </button>
+            <button id="logoutBtn" class="btn-secondary" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
         </div>
+
+        <div class="welcome-title">
+            <h2>Bienvenido al Sistema de Restaurante</h2>
+        </div>
+
+        <!-- Modal de inicio de sesión -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content">
+                <h2><i class="fas fa-user-circle"></i> Iniciar Sesión</h2>
+                <form id="loginForm">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="email" id="username" placeholder="Correo electrónico" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="Contraseña" required>
+                    </div>
+                    <button type="submit" id="submitLogin" class="btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Entrar
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="notificationContainer"></div>
     </div>
 
-    <!-- Notificaciones -->
-    <div id="notificationContainer"></div>
-
-    <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="app.js"></script>
     <script type="module" src="reportes.js"></script>
-
 </body>
 </html>
-

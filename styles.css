@@ -44,6 +44,12 @@ body {
   z-index: -1;
 }
 
+.main-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 header {
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.8), rgba(46, 204, 113, 0.8));
   color: var(--white);
@@ -52,6 +58,18 @@ header {
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   position: relative;
   z-index: 1;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
 }
 
 header h1 {
@@ -70,6 +88,58 @@ header h1 {
   z-index: 1;
 }
 
+.welcome-title {
+  text-align: center;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.welcome-title h2 {
+  font-family: 'Caveat', cursive;
+  font-size: 4.5rem;
+  color: #ffffff;
+  text-shadow: 
+    -2px -2px 0 #ffffff,  
+    2px -2px 0 #ffffff,
+    -2px 2px 0 #ffffff,
+    2px 2px 0 #ffffff,
+    0 0 15px rgba(255,255,255,0.9),
+    0 0 30px rgba(255,255,255,0.7);
+  transform: rotate(-5deg);
+  letter-spacing: 3px;
+  font-weight: 900;
+  background: linear-gradient(45deg, #ffffff, #f0f0f0, #e0e0e0);
+  -webkit-background-clip: text;
+  -moz-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  background-size: 200% 200%;
+  animation: gradientBG 5s ease infinite, aparecer 1s ease-out;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-5deg);
+  }
+}
 .btn-primary, .btn-secondary, .btn-danger {
   padding: 12px 24px;
   border: none;
@@ -304,12 +374,12 @@ tr:hover {
 
 @keyframes slideUp {
   from {
-      transform: translateY(100%) translateX(-50%);
-      opacity: 0;
+    transform: translateY(100%) translateX(-50%);
+    opacity: 0;
   }
   to {
-      transform: translateY(0) translateX(-50%);
-      opacity: 1;
+    transform: translateY(0) translateX(-50%);
+    opacity: 1;
   }
 }
 
@@ -357,45 +427,49 @@ tr:hover {
 
 @media screen and (max-width: 768px) {
   .menu-columns {
-      flex-direction: column;
+    flex-direction: column;
   }
 
   .menu-column {
-      width: 100%;
+    width: 100%;
   }
 
   .modal-content {
-      width: 95%;
-      margin: 5% auto;
-      padding: 30px;
+    width: 95%;
+    margin: 5% auto;
+    padding: 30px;
   }
   
   table, th, td {
-      font-size: 14px;
+    font-size: 14px;
   }
 
   header h1 {
-      font-size: 2.5em;
+    font-size: 2.5em;
   }
 
   .btn-primary, .btn-secondary, .btn-danger {
-      padding: 10px 20px;
-      font-size: 14px;
+    padding: 10px 20px;
+    font-size: 14px;
   }
 
   #orderType {
-      font-size: 14px;
-      padding: 12px;
+    font-size: 14px;
+    padding: 12px;
   }
 
   #mainContent {
-      padding: 20px;
+    padding: 20px;
+  }
+
+  .welcome-title h2 {
+    font-size: 3.5rem;
   }
 }
 
-/* New Styles for Enhanced Visual Appeal */
+/* Estilos adicionales para mejorar la apariencia visual */
 
-/* Gradient Backgrounds */
+/* Fondos con gradiente */
 .gradient-bg {
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.8), rgba(46, 204, 113, 0.8));
   color: var(--white);
@@ -404,7 +478,7 @@ tr:hover {
   margin-bottom: 20px;
 }
 
-/* Card Styles */
+/* Estilos de tarjeta */
 .card {
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 15px;
@@ -419,24 +493,24 @@ tr:hover {
   box-shadow: 0 10px 20px rgba(0,0,0,0.15);
 }
 
-/* Animated Icons */
+/* Iconos animados */
 .animated-icon {
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
   0% {
-      transform: scale(1);
+    transform: scale(1);
   }
   50% {
-      transform: scale(1.1);
+    transform: scale(1.1);
   }
   100% {
-      transform: scale(1);
+    transform: scale(1);
   }
 }
 
-/* Hover Effects */
+/* Efectos al pasar el mouse */
 .hover-effect {
   transition: all 0.3s ease;
 }
@@ -446,7 +520,7 @@ tr:hover {
   box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-/* Custom Scrollbar */
+/* Barra de desplazamiento personalizada */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -464,7 +538,7 @@ tr:hover {
   background: var(--secondary-color);
 }
 
-/* Loading Spinner */
+/* Spinner de carga */
 .loading-spinner {
   border: 4px solid var(--light-gray);
   border-top: 4px solid var(--primary-color);
@@ -507,7 +581,7 @@ tr:hover {
   opacity: 1;
 }
 
-/* Progress Bar */
+/* Barra de progreso */
 .progress-bar {
   width: 100%;
   background-color: var(--light-gray);
@@ -522,7 +596,7 @@ tr:hover {
   transition: width 0.5s ease;
 }
 
-/* Switch */
+/* Interruptor */
 .switch {
   position: relative;
   display: inline-block;
@@ -567,5 +641,3 @@ input:checked + .slider {
 input:checked + .slider:before {
   transform: translateX(26px);
 }
-
-
