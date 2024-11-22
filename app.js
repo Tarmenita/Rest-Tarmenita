@@ -746,13 +746,13 @@ function eliminarReporteVentas() {
     }
 }
 
-// Manejo de errores
+
 function manejarError(error, accion) {
     console.error(`Error al ${accion}:`, error);
     mostrarNotificacion(`Ocurrió un error al ${accion}. Por favor, intenta de nuevo.`, "error");
 }
 
-// Escuchar cambios en el estado de autenticación
+
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
         loginBtn.style.display = "none";
@@ -765,7 +765,7 @@ firebase.auth().onAuthStateChanged((user) => {
     }
 });
 
-// Exportar funciones necesarias para que sean accesibles globalmente
+
 window.mostrarFormularioCrearUsuario = mostrarFormularioCrearUsuario;
 window.mostrarGestorMenu = mostrarGestorMenu;
 window.mostrarReportes = mostrarReportes;
