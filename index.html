@@ -4,44 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BIENVENIDO A LA TARMEÑITA</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estilos.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <div class="fondo-imagen"></div>
     <header>
         <h1><i class="fas fa-utensils"></i> LA TARMEÑITA</h1>
     </header>
-    <div class="login-container">
-        <button id="loginBtn" class="btn-primary"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</button>
-        <button id="logoutBtn" class="btn-secondary" style="display: none;"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    <div class="contenedor-login">
+        <button id="btnIniciarSesion" class="boton boton-primario"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</button>
+        <button id="btnCerrarSesion" class="boton boton-secundario" style="display: none;"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
     </div>
-    <main id="mainContent">
+    <main id="contenidoPrincipal">
         <!-- El contenido se cargará dinámicamente aquí -->
     </main>
 
     <!-- Modal de inicio de sesión -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
+    <div id="modalInicioSesion" class="modal">
+        <div class="contenido-modal">
             <h2><i class="fas fa-user-circle"></i> Iniciar Sesión</h2>
-            <form id="loginForm">
-                <div class="input-group">
+            <form id="formularioInicioSesion">
+                <div class="grupo-entrada">
                     <i class="fas fa-user"></i>
-                    <input type="email" id="username" placeholder="Correo electrónico" required>
+                    <input type="email" id="correoElectronico" placeholder="Correo electrónico" required>
                 </div>
-                <div class="input-group">
+                <div class="grupo-entrada">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="password" placeholder="Contraseña" required>
+                    <input type="password" id="contrasena" placeholder="Contraseña" required>
                 </div>
-                <button type="submit" id="submitLogin" class="btn-primary"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+                <button type="submit" id="enviarInicioSesion" class="boton boton-primario"><i class="fas fa-sign-in-alt"></i> Entrar</button>
             </form>
         </div>
     </div>
 
-    <!-- Notificaciones -->
-    <div id="notificationContainer"></div>
+    <!-- Contenedor de notificaciones -->
+    <div id="contenedorNotificaciones"></div>
 
-    <!-- Firebase App (the core Firebase SDK) -->
+    <!-- Firebase App (el SDK principal de Firebase) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
